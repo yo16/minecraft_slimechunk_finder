@@ -12,7 +12,7 @@ interface ChunkMapProp {
 
 export function ChunkMap({ seed, xMin, zMin, playerPos }: ChunkMapProp) {
     const wArray = Array.from({ length: 10 }, (_, i) => i);
-    console.log(playerPos);
+    //console.log(playerPos);
     return (
         <div
             className="chunk-map-container"
