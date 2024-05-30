@@ -3,14 +3,14 @@ import { useState, useRef } from 'react';
 import { pos2Chunk } from './utils/pos2Chunk';
 import { ChunkMap } from './components/ChunkMap';
 
-import './App.css';
+import './AppFixedCell.css';
 
 type PlayerPosType = {
   x: number;
   z: number;
 };
 
-function App() {
+function AppFixedCell() {
   const [seed, setSeed] = useState("0");
   const [playerPos, setPlayerPos] = useState<PlayerPosType>({x: 0, z: 0});
   const refSeed = useRef(null);
@@ -95,4 +95,4 @@ function App() {
   );
 }
 
-export default App;
+export default AppFixedCell;
