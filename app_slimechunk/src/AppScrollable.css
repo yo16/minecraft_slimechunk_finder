@@ -1,0 +1,21 @@
+.app-container {
+
+}
+
+.inputs-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-box {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+.input-title {
+    width: 60px;
+    text-align: right;
+}
+.input-coordinate {
+    width :50px;
+}
