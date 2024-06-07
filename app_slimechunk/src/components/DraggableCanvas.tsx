@@ -141,6 +141,22 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                     }
                 }
             }
+            context.fillStyle = "rgba(239, 16, 16, 0.2)";
+            for(let chunkX=chunkXMin, i=0; chunkX<=chunkXMax; chunkX++, i++){
+                for( let chunkZ=chunkZMin, j=0; chunkZ<=chunkZMax; chunkZ++, j++) {
+                    if (
+                        (charactorChunk.x === chunkX) ||
+                        (charactorChunk.z === chunkZ)
+                    ) {
+                        context.fillRect(
+                            topAx + i * chunkWidthA,
+                            topAy + j * chunkWidthA,
+                            chunkWidthA,
+                            chunkWidthA
+                        );
+                    }
+                }
+            }
             context.fill();
 
             // 縦線
