@@ -316,13 +316,25 @@ export function DraggableCanvas({
                     );
                 }
             }
-            // 角
+
+            // 左上の空白
             context.beginPath();
             context.fillStyle = "rgb(255, 255, 255)";
             context.fillRect(
                 0, 0, GRAPH_OFFSET.x, GRAPH_OFFSET.y
             );
             context.fill();
+
+            // グラフ部を囲う
+            context.beginPath();
+            context.strokeStyle = "rgb(64, 64, 64)";
+            context.lineWidth = 1;
+            context.moveTo(GRAPH_OFFSET.x, GRAPH_OFFSET.y);
+            context.lineTo(canvas.width-1, GRAPH_OFFSET.y);
+            context.lineTo(canvas.width-1, canvas.height-1);
+            context.lineTo(GRAPH_OFFSET.x, canvas.height-1);
+            context.lineTo(GRAPH_OFFSET.x, GRAPH_OFFSET.y);
+            context.stroke();
         }
         draw();
 
@@ -503,7 +515,7 @@ export function DraggableCanvas({
                 ref={refCanvas}
                 width={500}
                 height={400}
-                style={{border: "1px solid #aaa"}}
+                style={{/* border: "1px solid #aaa" */}}
             />
             <input
                 type="range"
@@ -511,6 +523,7 @@ export function DraggableCanvas({
                 min={SLIDERRANGE_MM.min}
                 max={SLIDERRANGE_MM.max}
                 defaultValue={0}
+                style={{marginLeft: GRAPH_OFFSET.x, width: 500 - GRAPH_OFFSET.x}}
             />
         </div>
     )
