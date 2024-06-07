@@ -87,32 +87,32 @@ export default function AppScrollable() {
     return (
         <>
             <div className="app-container">
-                <div className="version-selector-container input-box">
-                    <div className="input-title">Version:</div>
-                    <div>
+                <div className="inputs-container">
+                    <div className="input-box">
+                        <div className="input-title">Version:</div>
                         <div>
-                            <input
-                                type="radio"
-                                name="mc_version"
-                                value="0"
-                                id="mc_version_0"
-                                checked={stateVersion === 0}
-                                onChange={() => setStateVersion(0)}
-                            /><label htmlFor="mc_version_0">Java Edition</label>
-                        </div>
-                        <div>
-                            <input
-                                type="radio"
-                                name="mc_version"
-                                value="1"
-                                id="mc_version_1"
-                                checked={stateVersion === 1}
-                                onChange={() => setStateVersion(1)}
-                            /><label htmlFor="mc_version_1">Bedrock Edition</label>
+                            <div>
+                                <input
+                                    type="radio"
+                                    name="mc_version"
+                                    value="0"
+                                    id="mc_version_0"
+                                    checked={stateVersion === 0}
+                                    onChange={() => setStateVersion(0)}
+                                /><label htmlFor="mc_version_0">Java Edition</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    name="mc_version"
+                                    value="1"
+                                    id="mc_version_1"
+                                    checked={stateVersion === 1}
+                                    onChange={() => setStateVersion(1)}
+                                /><label htmlFor="mc_version_1">Bedrock Edition</label>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="inputs-container">
                     <div className="input-box">
                         <div
                             className={"input-title" + ((stateVersion===1)?" input-disabled":"")}

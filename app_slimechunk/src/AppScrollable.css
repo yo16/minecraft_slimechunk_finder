@@ -2,11 +2,10 @@
     color: #999;
 }
 .app-container {
-
-}
-
-.version-selector-container {
-
+    background-color:#fff;
+    display: inline-flex;
+    flex-direction: column;
+    border-radius: 5px;
 }
 
 .inputs-container {

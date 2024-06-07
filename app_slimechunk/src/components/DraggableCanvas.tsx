@@ -258,15 +258,12 @@ export function DraggableCanvas({
             context.fill();
 
             // 座標軸
-            context.beginPath();
-            context.fillStyle = "rgb(255, 255, 255)";
-            context.fillRect(
+            context.clearRect(
                 0, 0, canvas.width, GRAPH_OFFSET.y
             );
-            context.fillRect(
+            context.clearRect(
                 0, 0, GRAPH_OFFSET.x, canvas.height
             );
-            context.fill();
             // 軸のタイトル
             context.font = "20px Arial";
             context.textAlign = "center";
@@ -318,12 +315,9 @@ export function DraggableCanvas({
             }
 
             // 左上の空白
-            context.beginPath();
-            context.fillStyle = "rgb(255, 255, 255)";
-            context.fillRect(
+            context.clearRect(
                 0, 0, GRAPH_OFFSET.x, GRAPH_OFFSET.y
             );
-            context.fill();
 
             // グラフ部を囲う
             context.beginPath();
@@ -510,12 +504,17 @@ export function DraggableCanvas({
     }, [seed, charactorCoordinte, version]);
 
     return (
-        <div style={{display:"flex",flexDirection:"column", alignItems: "flex-start", padding: "10px"}}>
+        <div style={{
+            display:"inline-flex",
+            flexDirection:"column",
+            alignItems: "flex-start",
+            padding: "0 30px 20px 0",
+            borderRadius: "8px",
+        }}>
             <canvas
                 ref={refCanvas}
                 width={500}
-                height={400}
-                style={{/* border: "1px solid #aaa" */}}
+                height={500}
             />
             <input
                 type="range"

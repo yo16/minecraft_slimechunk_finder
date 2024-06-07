@@ -11,6 +11,9 @@
       gtag('config', 'G-5532VXMWBP');
     </script>
 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <script
         async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8645722718290313"
         crossorigin="anonymous"
@@ -37,11 +40,23 @@
 
     <link rel="icon" href="./favicon.ico" sizes="any">
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <style>
+      body {
+        background-image: url("./slime.png");
+        background-size: 100px 100px;
+        background-repeat: repeat;
+        background-color: rgba(255,255,255, 0.9);
+        background-blend-mode: lighten;
+      }
+      .powered-by, .powered-by a {
+        color: #aaa;
+        font-size: 12px;
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <hr />
-    <a href="https://small-pieces-sandbox.onrender.com/">back to top</a>
+    <div class="powered-by"><a href="https://small-pieces-sandbox.onrender.com/">Powered by small pieces.</a></div>
   </body>
 </html>
