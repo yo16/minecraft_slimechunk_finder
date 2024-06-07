@@ -113,11 +113,27 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                 z: Math.floor(charactorCoordinte.z / 16),
             };
 
+            // チャンクのマスを描画する位置のオフセット
+            const graphOffset: Point = {
+                x: 70,
+                y: 50,
+            };
+
+            // 座標軸の数値を書く頻度（軸内に10個くらい）
+            const tickMarksFreq = Math.floor((chunkXMax - chunkXMin)/10);
+            //console.log({tickMarksFreq});
+            // 今のチャンクの座標を必ず書くようにoffset値を設定
+            const tickMarksOffset = {
+                x: (charactorChunk.x - chunkXMin) % tickMarksFreq,
+                z: (charactorChunk.z - chunkZMin) % tickMarksFreq,
+            };
+
             // 描画開始 -----
+
             // 初期化
             context.clearRect(0, 0, canvas.width, canvas.height);
 
-            // チャンクごとの判定と色
+            // スライムチャンクごとの判定と色
             context.beginPath();
             context.fillStyle = "rgba(16, 239, 16, 0.6)";
             const topAx = applyMatrix(matrixBA, {x: chunkXMin*16, y: 0}).x;
@@ -132,8 +148,8 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                         if (mapX.get(chunkZ)){
                             // chunk座標を座標系Aへ変換して矩形を描画
                             context.fillRect(
-                                topAx + i * chunkWidthA,
-                                topAy + j * chunkWidthA,
+                                graphOffset.x + topAx + i * chunkWidthA,
+                                graphOffset.y + topAy + j * chunkWidthA,
                                 chunkWidthA,
                                 chunkWidthA
                             );
@@ -141,6 +157,10 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                     }
                 }
             }
+            context.fill();
+
+            // 今の位置の縦横のチャンクの色
+            context.beginPath();
             context.fillStyle = "rgba(239, 16, 16, 0.2)";
             for(let chunkX=chunkXMin, i=0; chunkX<=chunkXMax; chunkX++, i++){
                 for( let chunkZ=chunkZMin, j=0; chunkZ<=chunkZMax; chunkZ++, j++) {
@@ -149,8 +169,8 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                         (charactorChunk.z === chunkZ)
                     ) {
                         context.fillRect(
-                            topAx + i * chunkWidthA,
-                            topAy + j * chunkWidthA,
+                            graphOffset.x + topAx + i * chunkWidthA,
+                            graphOffset.y + topAy + j * chunkWidthA,
                             chunkWidthA,
                             chunkWidthA
                         );
@@ -164,20 +184,91 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             context.strokeStyle = "rgba(32, 32, 32, 0.7)";
             context.lineWidth = 1;
             for (let x = VLLeftA.x; x <= canvas.width; x += chunkWidthA) {
-                context.moveTo(x, 0);
-                context.lineTo(x, canvas.height);
+                context.moveTo(graphOffset.x + x, graphOffset.y);
+                context.lineTo(graphOffset.x + x, graphOffset.y + canvas.height);
             }
             // 横線
             for (let y = HLTopA.y; y <= canvas.height; y += chunkWidthA) {
-                context.moveTo(0, y);
-                context.lineTo(canvas.width, y);
+                context.moveTo(graphOffset.x, graphOffset.y + y);
+                context.lineTo(graphOffset.x + canvas.width, graphOffset.y + y);
             }
             context.stroke();
 
             // 現在の位置
             context.beginPath();
             context.fillStyle = "rgba(255, 0, 0, 0.7)";
-            context.arc(charactorPosA.x, charactorPosA.y, 10, 0, 2 * Math.PI);
+            context.arc(
+                graphOffset.x + charactorPosA.x,
+                graphOffset.y + charactorPosA.y,
+                10, 0, 2 * Math.PI
+            );
+            context.fill();
+
+            // 座標軸
+            context.beginPath();
+            context.fillStyle = "rgb(255, 255, 255)";
+            context.fillRect(
+                0, 0, canvas.width, graphOffset.y
+            );
+            context.fillRect(
+                0, 0, graphOffset.x, canvas.height
+            );
+            context.fill();
+            // 軸のタイトル
+            context.font = "20px Arial";
+            context.textAlign = "center";
+            context.textBaseline = "middle";
+            context.fillStyle = "rgb(32, 32, 32)";
+            context.fillText(
+                "X ⇨",
+                graphOffset.x + (canvas.width - graphOffset.x) / 2,
+                20
+            );
+            context.fillText(
+                "Z",
+                20,
+                graphOffset.y + (canvas.height - graphOffset.y) / 2 - 12
+            );
+            context.fillText(
+                "⇩",
+                20,
+                graphOffset.y + (canvas.height - graphOffset.y) / 2 + 12
+            );
+
+
+            // x軸
+            context.font = "14px Arial";
+            context.textAlign = "center";
+            context.textBaseline = "alphabetic";
+            context.fillStyle = "rgb(32, 32, 32)";
+            for(let chunkX = chunkXMin, i = 0; chunkX <= chunkXMax; chunkX++, i++) {
+                if ((i-tickMarksOffset.x)%tickMarksFreq === 0) {
+                    context.fillText(
+                        `${chunkX * 16}`,
+                        graphOffset.x + topAx + i * chunkWidthA,
+                        graphOffset.y - 3
+                    );
+                }
+            }
+            // z軸
+            context.textAlign = "right";
+            context.textBaseline = "middle";
+            for(let chunkZ = chunkZMin, i = 0; chunkZ <= chunkZMax; chunkZ++, i++) {
+                if ((i-tickMarksOffset.z)%tickMarksFreq === 0) {
+                    context.fillText(
+                        `${chunkZ * 16}`,
+                        graphOffset.x - 3,
+                        graphOffset.y + topAy + i * chunkWidthA
+                        
+                    );
+                }
+            }
+            // 角
+            context.beginPath();
+            context.fillStyle = "rgb(255, 255, 255)";
+            context.fillRect(
+                0, 0, graphOffset.x, graphOffset.y
+            );
             context.fill();
         }
         draw();
