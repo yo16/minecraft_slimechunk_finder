@@ -6,10 +6,15 @@ const SLIDERRANGE_MM = {
     min: -10,
     max: 10,
 };
+
 type Point = {
     x: number;
     y: number;
 };
+// x,zの順に指定するマップ
+type IsSlimeChunkMapZ = Map<number, boolean>;
+type IsSlimeChunkMap = Map<number, IsSlimeChunkMapZ>;
+
 interface DraggableCanvasProps {
     seed: bigint;
     charactorCoordinte: {
@@ -23,6 +28,13 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
     // input rangeへのref
     const refRange = useRef<HTMLInputElement>(null);
 
+    // isSlimeChunkの結果
+    const isSlimeChunkMapRef = useRef<IsSlimeChunkMap>(new Map());
+    
+    useEffect(() => {
+        // isSlimeChunkArrayを初期化
+        isSlimeChunkMapRef.current = new Map();
+    }, [seed])
 
     useEffect(() => {
         const canvas = refCanvas.current;
@@ -33,7 +45,7 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
         if (!range) return;
 
         // 座標系Bの原点を、座標系Aで示したときの座標値
-        let originB: Point = {x: 50, y: 50};
+        let originB: Point = {x: canvas.width/2, y: canvas.height/2};
 
         // 拡大率（座標系Aに対する座標系Bの拡大率、つまり>0のとき、Bの方が大きい）
         let scale: number = 1.0;
@@ -43,6 +55,9 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
         // ドラッグの開始位置
         let dragStartPoint: Point | null = null;
 
+        // 計算済みのisSlimeChunk値
+        const isSlimeChunkMap: IsSlimeChunkMap = isSlimeChunkMapRef.current;
+
         // 描画
         function draw(paramOriginB?: Point) {
             if (!canvas) return;
@@ -51,6 +66,7 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             // この関数で使うoriginBを設定
             // パラメータがあればそれを、なければoriginBを使う
             const curOriginB = paramOriginB? paramOriginB: originB;
+            //console.log(curOriginB);
 
             // 座標系Aで、チャンク境界線のチャンクの幅
             const chunkWidthA = 16.0 * scale;
@@ -62,6 +78,10 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             // canvasの左上右下の、座標系Bの座標値を計算
             const leftUpperB = applyMatrix(matrixAB, {x: 0, y: 0});
             const rightBottomB = applyMatrix(matrixAB, {x: canvas.width, y: canvas.height});
+            //console.log(canvas.width);
+            //console.log(canvas.height);
+            //console.log({leftUpperB});
+            //console.log({rightBottomB});
 
             // チャンク境界線の縦線(verticalLine)の左端の座標値
             const VLLeftB = (
@@ -74,16 +94,17 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             ) * 16;
             const HLTopA = applyMatrix(matrixBA, {x: 0, y: HLTopB});
 
-            // チャンクごとの配列
-            const isSlimeChunkArray: boolean[][] = [];
-            for(let chunkX=Math.floor(leftUpperB.x/16); chunkX<rightBottomB.x; chunkX++) {
-                const isSlimeChunkXLine: boolean[] = [];
-                for(let chunkY=Math.floor(leftUpperB.y/16); chunkY<rightBottomB.y; chunkY++) {
-                    const isSC = isSlimeChunk(seed, chunkX, chunkY);
-                    //console.log({isSC});
-                    isSlimeChunkXLine.push(isSC);
+            // 表示するチャンク座標の範囲
+            const chunkXMin = Math.floor(leftUpperB.x / 16);
+            const chunkXMax = Math.floor(rightBottomB.x / 16);
+            const chunkZMin = Math.floor(leftUpperB.y / 16);
+            const chunkZMax = Math.floor(rightBottomB.y / 16);
+
+            // チャンクごとのisSlimeChunkの計算
+            for(let chunkX=chunkXMin; chunkX<=chunkXMax; chunkX++) {
+                for(let chunkZ=chunkZMin; chunkZ<=chunkZMax; chunkZ++) {
+                    setIsSlimeChunkIfNotExists(chunkX, chunkZ);
                 }
-                isSlimeChunkArray.push(isSlimeChunkXLine);
             }
 
             // ユーザーの現在位置
@@ -96,12 +117,24 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             // チャンクごとの判定と色
             context.beginPath();
             context.fillStyle = "rgba(16, 239, 16, 0.5)";
-            const topAx = applyMatrix(matrixBA, {x: Math.floor(leftUpperB.x/16)*16, y: 0}).x;
-            const topAy = applyMatrix(matrixBA, {x: 0, y: Math.floor(leftUpperB.y/16)*16}).y;
-            for(let x=0; x<isSlimeChunkArray.length; x++){
-                for( let y=0; y<isSlimeChunkArray[x].length; y++){
-                    if (isSlimeChunkArray[x][y]){
-                        context.fillRect(topAx + x*chunkWidthA, topAy + y*chunkWidthA, chunkWidthA, chunkWidthA);
+            const topAx = applyMatrix(matrixBA, {x: chunkXMin*16, y: 0}).x;
+            const topAy = applyMatrix(matrixBA, {x: 0, y: chunkZMin*16}).y;
+            // x値のキー配列を取得
+            for(let chunkX=chunkXMin, i=0; chunkX<=chunkXMax; chunkX++, i++){
+                // z値のキー配列を取得
+                const keysZ_origin = isSlimeChunkMap.get(chunkX)?.keys();
+                const mapX = isSlimeChunkMap.get(chunkX);
+                if (mapX && keysZ_origin) { // xもzもある
+                    for( let chunkZ=chunkZMin, j=0; chunkZ<=chunkZMax; chunkZ++, j++){
+                        if (mapX.get(chunkZ)){
+                            // chunk座標を座標系Aへ変換して矩形を描画
+                            context.fillRect(
+                                topAx + i * chunkWidthA,
+                                topAy + j * chunkWidthA,
+                                chunkWidthA,
+                                chunkWidthA
+                            );
+                        }
                     }
                 }
             }
@@ -264,13 +297,29 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
         };
     }, [seed, charactorCoordinte]);
 
+    // isSlimeChunkMapRefの操作
+    function ensureZMap(x: number): IsSlimeChunkMapZ {
+        let zMap = isSlimeChunkMapRef.current.get(x);
+        if (!zMap) {
+            zMap = new Map();
+            isSlimeChunkMapRef.current.set(x, zMap);
+        }
+        return zMap;
+    }
+    function setIsSlimeChunkIfNotExists(x: number, z: number) {
+        const zMap = ensureZMap(x);
+        if (!zMap.has(z)) {
+            zMap.set(z, isSlimeChunk(seed, x, z));
+        }
+    }
+
     return (
         <div style={{display:"flex",flexDirection:"column", alignItems: "flex-start", padding: "10px"}}>
             <canvas
                 ref={refCanvas}
                 width={500}
                 height={400}
-                style={{border: "1px solid #000"}}
+                style={{border: "3px solid #999"}}
             />
             <input
                 type="range"
