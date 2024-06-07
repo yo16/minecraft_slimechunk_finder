@@ -65,8 +65,6 @@ export default function AppScrollable() {
                             defaultValue="0"
                             ref={refX}
                         />
-                    </div>
-                    <div className="input-box">
                         <div className="input-title">Z:</div>
                         <input
                             type="text"
