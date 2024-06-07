@@ -6,6 +6,11 @@ const SLIDERRANGE_MM = {
     min: -10,
     max: 10,
 };
+// チャンクのマスを描画する位置のオフセット
+const GRAPH_OFFSET: Point = {
+    x: 70,
+    y: 50,
+};
 
 type Point = {
     x: number;
@@ -21,8 +26,11 @@ interface DraggableCanvasProps {
         x: number;
         z: number;
     };
+    forceDraw: number;
 }
-export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps) {
+export function DraggableCanvas({
+    seed, charactorCoordinte, forceDraw
+}: DraggableCanvasProps) {
     // canvasへのref
     const refCanvas = useRef<HTMLCanvasElement>(null);
     // input rangeへのref
@@ -34,7 +42,7 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
     useEffect(() => {
         // isSlimeChunkArrayを初期化
         isSlimeChunkMapRef.current = new Map();
-    }, [seed])
+    }, [seed]);
 
     useEffect(() => {
         const canvas = refCanvas.current;
@@ -44,11 +52,19 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
         const range = refRange.current;
         if (!range) return;
 
-        // 座標系Bの原点を、座標系Aで示したときの座標値
-        let originB: Point = {x: canvas.width/2, y: canvas.height/2};
-
         // 拡大率（座標系Aに対する座標系Bの拡大率、つまり>0のとき、Bの方が大きい）
         let scale: number = 1.0;
+        range.value = `${scale}`;
+
+        // 座標系Bの原点を、座標系Aで示したときの座標値
+        //let originB: Point = {
+        //    x: (canvas.width - GRAPH_OFFSET.x) / 2,
+        //    y: (canvas.height - GRAPH_OFFSET.y) / 2
+        //};
+        let originB: Point = {
+            x: (canvas.width - GRAPH_OFFSET.x) / 2 - charactorCoordinte.x * scale,
+            y: (canvas.height - GRAPH_OFFSET.y) / 2 - charactorCoordinte.z * scale
+        }
 
         // ドラッグしている状態
         let isDragging: boolean = false;
@@ -107,16 +123,13 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             }
 
             // ユーザーの現在位置
-            const charactorPosA = applyMatrix(matrixBA, {x: charactorCoordinte.x, y: charactorCoordinte.z});
+            const charactorPosA = applyMatrix(
+                matrixBA,
+                {x: charactorCoordinte.x, y: charactorCoordinte.z}
+            );
             const charactorChunk = {
                 x: Math.floor(charactorCoordinte.x / 16),
                 z: Math.floor(charactorCoordinte.z / 16),
-            };
-
-            // チャンクのマスを描画する位置のオフセット
-            const graphOffset: Point = {
-                x: 70,
-                y: 50,
             };
 
             // 座標軸の数値を書く頻度（軸内に10個くらい）
@@ -148,8 +161,8 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                         if (mapX.get(chunkZ)){
                             // chunk座標を座標系Aへ変換して矩形を描画
                             context.fillRect(
-                                graphOffset.x + topAx + i * chunkWidthA,
-                                graphOffset.y + topAy + j * chunkWidthA,
+                                GRAPH_OFFSET.x + topAx + i * chunkWidthA,
+                                GRAPH_OFFSET.y + topAy + j * chunkWidthA,
                                 chunkWidthA,
                                 chunkWidthA
                             );
@@ -169,8 +182,8 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                         (charactorChunk.z === chunkZ)
                     ) {
                         context.fillRect(
-                            graphOffset.x + topAx + i * chunkWidthA,
-                            graphOffset.y + topAy + j * chunkWidthA,
+                            GRAPH_OFFSET.x + topAx + i * chunkWidthA,
+                            GRAPH_OFFSET.y + topAy + j * chunkWidthA,
                             chunkWidthA,
                             chunkWidthA
                         );
@@ -184,13 +197,13 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             context.strokeStyle = "rgba(32, 32, 32, 0.7)";
             context.lineWidth = 1;
             for (let x = VLLeftA.x; x <= canvas.width; x += chunkWidthA) {
-                context.moveTo(graphOffset.x + x, graphOffset.y);
-                context.lineTo(graphOffset.x + x, graphOffset.y + canvas.height);
+                context.moveTo(GRAPH_OFFSET.x + x, GRAPH_OFFSET.y);
+                context.lineTo(GRAPH_OFFSET.x + x, GRAPH_OFFSET.y + canvas.height);
             }
             // 横線
             for (let y = HLTopA.y; y <= canvas.height; y += chunkWidthA) {
-                context.moveTo(graphOffset.x, graphOffset.y + y);
-                context.lineTo(graphOffset.x + canvas.width, graphOffset.y + y);
+                context.moveTo(GRAPH_OFFSET.x, GRAPH_OFFSET.y + y);
+                context.lineTo(GRAPH_OFFSET.x + canvas.width, GRAPH_OFFSET.y + y);
             }
             context.stroke();
 
@@ -198,8 +211,8 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             context.beginPath();
             context.fillStyle = "rgba(255, 0, 0, 0.7)";
             context.arc(
-                graphOffset.x + charactorPosA.x,
-                graphOffset.y + charactorPosA.y,
+                GRAPH_OFFSET.x + charactorPosA.x,
+                GRAPH_OFFSET.y + charactorPosA.y,
                 10, 0, 2 * Math.PI
             );
             context.fill();
@@ -208,10 +221,10 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             context.beginPath();
             context.fillStyle = "rgb(255, 255, 255)";
             context.fillRect(
-                0, 0, canvas.width, graphOffset.y
+                0, 0, canvas.width, GRAPH_OFFSET.y
             );
             context.fillRect(
-                0, 0, graphOffset.x, canvas.height
+                0, 0, GRAPH_OFFSET.x, canvas.height
             );
             context.fill();
             // 軸のタイトル
@@ -221,18 +234,18 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             context.fillStyle = "rgb(32, 32, 32)";
             context.fillText(
                 "X ⇨",
-                graphOffset.x + (canvas.width - graphOffset.x) / 2,
+                GRAPH_OFFSET.x + (canvas.width - GRAPH_OFFSET.x) / 2,
                 20
             );
             context.fillText(
                 "Z",
                 20,
-                graphOffset.y + (canvas.height - graphOffset.y) / 2 - 12
+                GRAPH_OFFSET.y + (canvas.height - GRAPH_OFFSET.y) / 2 - 12
             );
             context.fillText(
                 "⇩",
                 20,
-                graphOffset.y + (canvas.height - graphOffset.y) / 2 + 12
+                GRAPH_OFFSET.y + (canvas.height - GRAPH_OFFSET.y) / 2 + 12
             );
 
 
@@ -245,8 +258,8 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                 if ((i-tickMarksOffset.x)%tickMarksFreq === 0) {
                     context.fillText(
                         `${chunkX * 16}`,
-                        graphOffset.x + topAx + i * chunkWidthA,
-                        graphOffset.y - 3
+                        GRAPH_OFFSET.x + topAx + i * chunkWidthA,
+                        GRAPH_OFFSET.y - 3
                     );
                 }
             }
@@ -257,8 +270,8 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                 if ((i-tickMarksOffset.z)%tickMarksFreq === 0) {
                     context.fillText(
                         `${chunkZ * 16}`,
-                        graphOffset.x - 3,
-                        graphOffset.y + topAy + i * chunkWidthA
+                        GRAPH_OFFSET.x - 3,
+                        GRAPH_OFFSET.y + topAy + i * chunkWidthA
                         
                     );
                 }
@@ -267,7 +280,7 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             context.beginPath();
             context.fillStyle = "rgb(255, 255, 255)";
             context.fillRect(
-                0, 0, graphOffset.x, graphOffset.y
+                0, 0, GRAPH_OFFSET.x, GRAPH_OFFSET.y
             );
             context.fill();
         }
@@ -429,7 +442,7 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                 ref={refCanvas}
                 width={500}
                 height={400}
-                style={{border: "3px solid #999"}}
+                style={{border: "1px solid #aaa"}}
             />
             <input
                 type="range"

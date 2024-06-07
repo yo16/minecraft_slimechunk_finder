@@ -10,6 +10,7 @@ export default function AppScrollable() {
     const [stateSeed, setStateSeed] = useState<bigint>(BigInt(0));
     const [stateX, setStateX] = useState<number>(0);
     const [stateZ, setStateZ] = useState<number>(0);
+    const [forceDrawValue, setForceDrawValue] = useState<number>(0);
 
     useEffect(() => {
         const inputSeed = refSeed.current;
@@ -45,6 +46,12 @@ export default function AppScrollable() {
         }
     });
 
+    // Goボタンクリック時
+    function handleOnClickGo() {
+        // 強制的に再描画させるため、forceDrawValueをインクリメントする
+        setForceDrawValue(forceDrawValue+1);
+    }
+
     return (
         <>
             <div className="app-container">
@@ -58,20 +65,26 @@ export default function AppScrollable() {
                         />
                     </div>
                     <div className="input-box">
-                        <div className="input-title">X:</div>
+                        <div className="input-title">(X, Z): </div>
+                        (
                         <input
                             type="text"
                             className="input-coordinate"
                             defaultValue="0"
                             ref={refX}
                         />
-                        <div className="input-title">Z:</div>
+                        ,
                         <input
                             type="text"
                             className="input-coordinate"
                             defaultValue="0"
                             ref={refZ}
                         />
+                        )
+                        <button
+                            className="button-move"
+                            onClick={handleOnClickGo}
+                        >GO</button>
                     </div>
                 </div>
 
@@ -81,6 +94,7 @@ export default function AppScrollable() {
                         x: stateX,
                         z: stateZ
                     }}
+                    forceDraw={forceDrawValue}
                 />
             </div>
         </>

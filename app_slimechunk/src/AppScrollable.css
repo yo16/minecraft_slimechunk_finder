@@ -20,3 +20,8 @@
 .input-coordinate {
     width :50px;
 }
+.button-move {
+    margin: 0 15px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
