@@ -24,20 +24,36 @@ export default function AppScrollable() {
         // seed入力
         function handleInputSeed(event:any) {
             if (!inputSeed) return;
-            const seedValue: bigint = BigInt(inputSeed.value);
-            setStateSeed(seedValue);
+            try {
+                const seedValue: bigint = BigInt(inputSeed.value);
+                setStateSeed(seedValue);
+            } catch (e) {
+                // マイナスや文字などの場合は何もしない
+                return;
+            }
         }
         // x座標入力
         function handleInputX(event:any) {
             if (!inputX) return;
-            const xValue: number = Number(inputX.value);
-            setStateX(xValue);
+            try {
+                const xValue: number = Number(inputX.value);
+                setStateX(xValue);
+            } catch (e) {
+                // マイナスや文字などの場合は何もしない
+                return;
+            }
         }
         // z座標入力
         function handleInputZ(event:any) {
             if (!inputZ) return;
-            const zValue: number = Number(inputZ.value);
-            setStateZ(zValue);
+
+            try {
+                const zValue: number = Number(inputZ.value);
+                setStateZ(zValue);
+            } catch (e) {
+                // マイナスや文字などの場合は何もしない
+                return;
+            }
         }
 
         // ハンドラー登録
