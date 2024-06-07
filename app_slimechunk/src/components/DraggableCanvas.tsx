@@ -300,6 +300,22 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             ];
         }
 
+        // isSlimeChunkMapRefの操作
+        function ensureZMap(x: number): IsSlimeChunkMapZ {
+            let zMap = isSlimeChunkMapRef.current.get(x);
+            if (!zMap) {
+                zMap = new Map();
+                isSlimeChunkMapRef.current.set(x, zMap);
+            }
+            return zMap;
+        }
+        function setIsSlimeChunkIfNotExists(x: number, z: number) {
+            const zMap = ensureZMap(x);
+            if (!zMap.has(z)) {
+                zMap.set(z, isSlimeChunk(seed, x, z));
+            }
+        }
+
         canvas.addEventListener("mousedown", handleMouseDown);
         canvas.addEventListener("mousemove", handleMouseMove);
         canvas.addEventListener("mouseup", handleMouseUp);
@@ -315,22 +331,6 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             range.removeEventListener('input', handleRangeChange);
         };
     }, [seed, charactorCoordinte]);
-
-    // isSlimeChunkMapRefの操作
-    function ensureZMap(x: number): IsSlimeChunkMapZ {
-        let zMap = isSlimeChunkMapRef.current.get(x);
-        if (!zMap) {
-            zMap = new Map();
-            isSlimeChunkMapRef.current.set(x, zMap);
-        }
-        return zMap;
-    }
-    function setIsSlimeChunkIfNotExists(x: number, z: number) {
-        const zMap = ensureZMap(x);
-        if (!zMap.has(z)) {
-            zMap.set(z, isSlimeChunk(seed, x, z));
-        }
-    }
 
     return (
         <div style={{display:"flex",flexDirection:"column", alignItems: "flex-start", padding: "10px"}}>
