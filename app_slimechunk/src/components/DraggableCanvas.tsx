@@ -66,11 +66,10 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             // この関数で使うoriginBを設定
             // パラメータがあればそれを、なければoriginBを使う
             const curOriginB = paramOriginB? paramOriginB: originB;
-            //console.log(curOriginB);
 
             // 座標系Aで、チャンク境界線のチャンクの幅
             const chunkWidthA = 16.0 * scale;
-            
+
             // 座標系Aと座標系Bの変換マトリクス
             const matrixBA = getMatrixA2B(curOriginB);
             const matrixAB = inverse3x3(matrixBA);
@@ -108,7 +107,11 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             }
 
             // ユーザーの現在位置
-            const chractorPosA = applyMatrix(matrixBA, {x: charactorCoordinte.x, y: charactorCoordinte.z});
+            const charactorPosA = applyMatrix(matrixBA, {x: charactorCoordinte.x, y: charactorCoordinte.z});
+            const charactorChunk = {
+                x: Math.floor(charactorCoordinte.x / 16),
+                z: Math.floor(charactorCoordinte.z / 16),
+            };
 
             // 描画開始 -----
             // 初期化
@@ -116,7 +119,7 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
 
             // チャンクごとの判定と色
             context.beginPath();
-            context.fillStyle = "rgba(16, 239, 16, 0.5)";
+            context.fillStyle = "rgba(16, 239, 16, 0.6)";
             const topAx = applyMatrix(matrixBA, {x: chunkXMin*16, y: 0}).x;
             const topAy = applyMatrix(matrixBA, {x: 0, y: chunkZMin*16}).y;
             // x値のキー配列を取得
@@ -125,7 +128,7 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
                 const keysZ_origin = isSlimeChunkMap.get(chunkX)?.keys();
                 const mapX = isSlimeChunkMap.get(chunkX);
                 if (mapX && keysZ_origin) { // xもzもある
-                    for( let chunkZ=chunkZMin, j=0; chunkZ<=chunkZMax; chunkZ++, j++){
+                    for( let chunkZ=chunkZMin, j=0; chunkZ<=chunkZMax; chunkZ++, j++) {
                         if (mapX.get(chunkZ)){
                             // chunk座標を座標系Aへ変換して矩形を描画
                             context.fillRect(
@@ -158,7 +161,7 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
             // 現在の位置
             context.beginPath();
             context.fillStyle = "rgba(255, 0, 0, 0.7)";
-            context.arc(chractorPosA.x, chractorPosA.y, 10, 0, 2 * Math.PI);
+            context.arc(charactorPosA.x, charactorPosA.y, 10, 0, 2 * Math.PI);
             context.fill();
         }
         draw();
@@ -273,10 +276,10 @@ export function DraggableCanvas({seed, charactorCoordinte}: DraggableCanvasProps
 
         // 座標系A→座標系Bへの変換マトリックスを返す
         function getMatrixA2B(originB: Point){
-            // 平行移動→拡大
+            // 拡大→移動
             return [
-                [scale, 0, originB.x * scale],
-                [0, scale, originB.y * scale],
+                [scale, 0, originB.x],
+                [0, scale, originB.y],
                 [0, 0, 1],
             ];
         }
