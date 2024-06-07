@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 
 import { isSlimeChunk } from "../utils/IsSlimeChunk";
+import { isSlimeChunkBedrock } from "../utils/IsSlimeChunkBedrock";
 
 const SLIDERRANGE_MM = {
     min: -10,
@@ -26,10 +27,11 @@ interface DraggableCanvasProps {
         x: number;
         z: number;
     };
+    version: number;
     forceDraw: number;
 }
 export function DraggableCanvas({
-    seed, charactorCoordinte, forceDraw
+    seed, charactorCoordinte, version, forceDraw
 }: DraggableCanvasProps) {
     // canvasへのref
     const refCanvas = useRef<HTMLCanvasElement>(null);
@@ -42,7 +44,7 @@ export function DraggableCanvas({
     useEffect(() => {
         // isSlimeChunkArrayを初期化
         isSlimeChunkMapRef.current = new Map();
-    }, [seed]);
+    }, [seed, version]);
 
     useEffect(() => {
         const canvas = refCanvas.current;
@@ -471,7 +473,11 @@ export function DraggableCanvas({
         function setIsSlimeChunkIfNotExists(x: number, z: number) {
             const zMap = ensureZMap(x);
             if (!zMap.has(z)) {
-                zMap.set(z, isSlimeChunk(seed, x, z));
+                if (version === 0) {
+                    zMap.set(z, isSlimeChunk(seed, x, z));
+                } else {
+                    zMap.set(z, isSlimeChunkBedrock(x, z));
+                }
             }
         }
 
@@ -489,7 +495,7 @@ export function DraggableCanvas({
             canvas.removeEventListener("wheel", handleMouseWheel);
             range.removeEventListener('input', handleRangeChange);
         };
-    }, [seed, charactorCoordinte]);
+    }, [seed, charactorCoordinte, version]);
 
     return (
         <div style={{display:"flex",flexDirection:"column", alignItems: "flex-start", padding: "10px"}}>

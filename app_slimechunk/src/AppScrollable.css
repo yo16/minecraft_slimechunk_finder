@@ -1,4 +1,11 @@
+.input-disabled {
+    color: #999;
+}
 .app-container {
+
+}
+
+.version-selector-container {
 
 }
 
@@ -11,11 +18,12 @@
     display: flex;
     flex-direction: row;
     gap: 5px;
-    margin: 5px;
+    margin: 7px 3px;
 }
 .input-title {
-    width: 60px;
+    width: 70px;
     text-align: right;
+    margin-right: 8px;
 }
 .input-coordinate {
     width :50px;
