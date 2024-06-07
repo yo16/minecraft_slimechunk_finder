@@ -75,7 +75,7 @@ export function DraggableCanvas({
         const isSlimeChunkMap: IsSlimeChunkMap = isSlimeChunkMapRef.current;
 
         // 描画
-        function draw(paramOriginB?: Point) {
+        function draw(paramOriginB?: Point | null, mousePos?: Point) {
             if (!canvas) return;
             if (!context) return;
             
@@ -131,6 +131,22 @@ export function DraggableCanvas({
                 x: Math.floor(charactorCoordinte.x / 16),
                 z: Math.floor(charactorCoordinte.z / 16),
             };
+
+            // マウスカーソルの位置
+            let cursorPosChunk = null;
+            if (mousePos) {
+                const cursorPosB = applyMatrix(
+                    matrixAB,
+                    {
+                        x: mousePos.x - GRAPH_OFFSET.x,
+                        y: mousePos.y - GRAPH_OFFSET.y
+                    }
+                );
+                cursorPosChunk = {
+                    x: Math.floor(cursorPosB.x / 16),
+                    z: Math.floor(cursorPosB.y / 16),
+                };
+            }
 
             // 座標軸の数値を書く頻度（軸内に10個くらい）
             const tickMarksFreq = Math.floor((chunkXMax - chunkXMin)/10);
@@ -191,6 +207,28 @@ export function DraggableCanvas({
                 }
             }
             context.fill();
+
+            // カーソル位置の縦横のチャンクの色
+            if (cursorPosChunk) {
+                context.beginPath();
+                context.fillStyle = "rgba(239, 239, 16, 0.4)";
+                for(let chunkX=chunkXMin, i=0; chunkX<=chunkXMax; chunkX++, i++){
+                    for( let chunkZ=chunkZMin, j=0; chunkZ<=chunkZMax; chunkZ++, j++) {
+                        if (
+                            (cursorPosChunk.x === chunkX) ||
+                            (cursorPosChunk.z === chunkZ)
+                        ) {
+                            context.fillRect(
+                                GRAPH_OFFSET.x + topAx + i * chunkWidthA,
+                                GRAPH_OFFSET.y + topAy + j * chunkWidthA,
+                                chunkWidthA,
+                                chunkWidthA
+                            );
+                        }
+                    }
+                }
+                context.fill();
+            }
 
             // 縦線
             context.beginPath();
@@ -295,14 +333,28 @@ export function DraggableCanvas({
         }
         function handleMouseMove(event: MouseEvent){
             //console.log("mouseMove");
-            if (!isDragging) return;
+            //if (!isDragging) return;
+            if (!canvas) return;
+
+            // マウスの位置を取得（ブラウザの左上が原点）
+            const mousePos: Point = {
+                x: event.clientX,
+                y: event.clientY
+            };
 
             // 今のoriginBを取得
-            const movingOriginB = getOriginBDragging({x: event.clientX, y: event.clientY}); 
-            if (!movingOriginB) return;
+            const movingOriginB = getOriginBDragging(mousePos); 
+            //if (!movingOriginB) return;
+
+            // マウスの位置を、canvasの座標系に変換
+            const rect = canvas.getBoundingClientRect();
+            const canvasMousePos: Point = {
+                x: mousePos.x - rect.left,
+                y: mousePos.y - rect.top
+            };
 
             // 描画
-            draw(movingOriginB)
+            draw(movingOriginB, canvasMousePos);
         }
         function handleMouseUp(event: MouseEvent){
             //console.log("mouseUp");
@@ -355,9 +407,9 @@ export function DraggableCanvas({
         }
         
         // ドラッグ中のoriginBを返す
-        function getOriginBDragging(curMousePos: Point): Point|void{
-            if (!isDragging) return;
-            if (!dragStartPoint) return;
+        function getOriginBDragging(curMousePos: Point): Point | null{
+            if (!isDragging) return null;
+            if (!dragStartPoint) return null;
 
             return {
                 x: originB.x + curMousePos.x - dragStartPoint.x,
@@ -373,7 +425,10 @@ export function DraggableCanvas({
             // 拡大中心点（座標系A）
             const zoomCenter: Point = propCenter
                 ? propCenter
-                : {x: refCanvas.current.width/2, y: refCanvas.current.height/2}
+                : {
+                    x: refCanvas.current.width/2,
+                    y: refCanvas.current.height/2
+                }
             ;
     
             // 拡大中心点→originBinAを、newScale/scale 倍した先が新しいoriginBinAとなる
